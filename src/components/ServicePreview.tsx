@@ -146,7 +146,7 @@ const ServicePreview = () => {
                   placeholder="오늘은 이런 대화를 나눴어요..."
                   className="w-full h-32 bg-muted/30 border border-border rounded-xl p-4 text-sm resize-none"
                   disabled
-                  value="다음 달에 동생 결혼식 있음. 손 관리는 2주 전에 다시 오겠다고 하심. 결혼식 얘기 해주면 좋아할 듯."
+                  value="다음 달에 동생 결혼식 있음. 손 관리는 2주 전에 다시 오겠다고 하심. 다음 방문 때 결혼식 이야기 하면 좋을 거 같다."
                 />
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="important" className="rounded" disabled />
