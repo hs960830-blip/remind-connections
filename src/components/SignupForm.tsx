@@ -4,6 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
+import PrivacyPolicyModal from "./PrivacyPolicyModal";
 
 const occupationCategories = [
   "미용",
@@ -37,6 +39,11 @@ const signupSchema = z.object({
     .trim()
     .max(1000, { message: "기대사항은 1000자를 초과할 수 없습니다" })
     .optional(),
+  privacyConsent: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: "개인정보처리방침에 동의해주세요",
+    }),
 });
 
 const SignupForm = () => {
@@ -44,6 +51,7 @@ const SignupForm = () => {
   const [occupationCategory, setOccupationCategory] = useState("");
   const [detailedOccupation, setDetailedOccupation] = useState("");
   const [expectations, setExpectations] = useState("");
+  const [privacyConsent, setPrivacyConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -59,6 +67,7 @@ const SignupForm = () => {
         occupationCategory: occupationCategory,
         detailedOccupation: detailedOccupation,
         expectations: expectations || undefined,
+        privacyConsent: privacyConsent,
       });
 
       // Insert into database
@@ -209,10 +218,33 @@ const SignupForm = () => {
             />
           </div>
 
+          <div className="flex items-start gap-3 py-2">
+            <Checkbox
+              id="privacyConsent"
+              checked={privacyConsent}
+              onCheckedChange={(checked) => setPrivacyConsent(checked === true)}
+              className="mt-1"
+            />
+            <label
+              htmlFor="privacyConsent"
+              className="text-sm text-foreground leading-relaxed cursor-pointer"
+            >
+              <PrivacyPolicyModal>
+                <button
+                  type="button"
+                  className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                >
+                  개인정보처리방침
+                </button>
+              </PrivacyPolicyModal>
+              에 동의합니다 <span className="text-destructive">*</span>
+            </label>
+          </div>
+
           <div className="pt-2">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
+            <Button
+              type="submit"
+              disabled={isSubmitting || !privacyConsent}
               className="w-full bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg text-lg py-6 disabled:opacity-50"
             >
               {isSubmitting ? "등록 중..." : "소식 알림받기"}
