@@ -3,19 +3,20 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
 
-const occupations = [
-  "영업직",
-  "미용 / 네일 / 피부",
-  "돌봄 / 특수교사",
-  "비서 / 보좌관",
-  "자영업자 (고객 상대 서비스업)",
+const occupationCategories = [
+  "미용",
+  "네일",
+  "영업",
+  "교육",
+  "서비스",
+  "의료",
   "기타"
 ];
 
 const SignupForm = () => {
   const [email, setEmail] = useState("");
-  const [occupation, setOccupation] = useState("");
-  const [otherOccupation, setOtherOccupation] = useState("");
+  const [occupationCategory, setOccupationCategory] = useState("");
+  const [detailedOccupation, setDetailedOccupation] = useState("");
   const [expectations, setExpectations] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
@@ -23,10 +24,10 @@ const SignupForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !occupation) {
+    if (!email || !occupationCategory || !detailedOccupation) {
       toast({
         title: "입력 확인",
-        description: "이메일과 직종을 입력해주세요.",
+        description: "이메일, 직종 대분류, 세부 직종을 모두 입력해주세요.",
         variant: "destructive"
       });
       return;
@@ -97,45 +98,38 @@ const SignupForm = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground block">
-              직종 선택 <span className="text-destructive">*</span>
+            <label htmlFor="occupationCategory" className="text-sm font-semibold text-foreground block">
+              직종 대분류 <span className="text-destructive">*</span>
             </label>
-            <div className="grid md:grid-cols-2 gap-3">
-              {occupations.map((occ) => (
-                <label
-                  key={occ}
-                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${
-                    occupation === occ
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="occupation"
-                    value={occ}
-                    checked={occupation === occ}
-                    onChange={(e) => setOccupation(e.target.value)}
-                    className="text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm text-foreground">{occ}</span>
-                </label>
+            <select
+              id="occupationCategory"
+              value={occupationCategory}
+              onChange={(e) => setOccupationCategory(e.target.value)}
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer z-10"
+              required
+            >
+              <option value="" disabled>직종을 선택해주세요</option>
+              {occupationCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
-          {occupation === "기타" && (
-            <div className="space-y-2">
-              <label htmlFor="otherOccupation" className="text-sm font-semibold text-foreground block">
-                직종을 알려주세요
+          {occupationCategory && (
+            <div className="space-y-2 animate-fade-in">
+              <label htmlFor="detailedOccupation" className="text-sm font-semibold text-foreground block">
+                세부 직종을 입력해주세요 <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
-                id="otherOccupation"
-                placeholder="예: 학원 강사, 웨딩 플래너 등"
-                value={otherOccupation}
-                onChange={(e) => setOtherOccupation(e.target.value)}
+                id="detailedOccupation"
+                placeholder="예: 헤어 디자이너, 특수교사, 플로리스트 등"
+                value={detailedOccupation}
+                onChange={(e) => setDetailedOccupation(e.target.value)}
                 className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                required
               />
             </div>
           )}
