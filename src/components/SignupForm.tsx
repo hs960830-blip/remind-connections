@@ -142,8 +142,8 @@ const SignupForm = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4 text-foreground">이런 도구가 있다면, 써보고 싶나요?</h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            RE:MIND를 실제 서비스로 만들기 전에, 정말 필요한 분들의 이야기를 먼저 듣고 싶어요.<br />
-            관심 있다면, 이메일과 직종을 남겨주세요. 가장 먼저 사용해 보실 수 있도록 연락드릴게요.
+            RE:MIND를 실제 서비스로 개발하는 지금, 정말 필요한 분들의 목소리가 큰 도움이 됩니다.<br />
+            관심이 있으시다면, 이메일과 직종을 남겨주세요. 가장 먼저 사용해 보실 수 있도록 안내해 드릴게요.
           </p>
         </div>
 
