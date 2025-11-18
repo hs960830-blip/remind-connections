@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 
 const occupationCategories = [
   "미용",
@@ -13,42 +15,97 @@ const occupationCategories = [
   "기타"
 ];
 
+// Validation schema
+const signupSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email({ message: "올바른 이메일 형식이 아닙니다" })
+    .max(255, { message: "이메일은 255자를 초과할 수 없습니다" }),
+  occupationCategory: z
+    .string()
+    .trim()
+    .nonempty({ message: "직종 카테고리를 선택해주세요" })
+    .max(50, { message: "직종 카테고리는 50자를 초과할 수 없습니다" }),
+  detailedOccupation: z
+    .string()
+    .trim()
+    .nonempty({ message: "세부 직종을 입력해주세요" })
+    .max(100, { message: "세부 직종은 100자를 초과할 수 없습니다" }),
+  expectations: z
+    .string()
+    .trim()
+    .max(1000, { message: "기대사항은 1000자를 초과할 수 없습니다" })
+    .optional(),
+});
+
 const SignupForm = () => {
   const [email, setEmail] = useState("");
   const [occupationCategory, setOccupationCategory] = useState("");
   const [detailedOccupation, setDetailedOccupation] = useState("");
   const [expectations, setExpectations] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !occupationCategory || !detailedOccupation) {
-      toast({
-        title: "입력 확인",
-        description: "이메일, 직종 대분류, 세부 직종을 모두 입력해주세요.",
-        variant: "destructive"
-      });
-      return;
-    }
+    setIsSubmitting(true);
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: "이메일 형식 오류",
-        description: "올바른 이메일 주소를 입력해주세요.",
-        variant: "destructive"
+    try {
+      // Validate input
+      const validatedData = signupSchema.parse({
+        email: email,
+        occupationCategory: occupationCategory,
+        detailedOccupation: detailedOccupation,
+        expectations: expectations || undefined,
       });
-      return;
-    }
 
-    setSubmitted(true);
-    toast({
-      title: "관심 등록 완료!",
-      description: "RE:MIND 출시 소식을 가장 먼저 알려드릴게요.",
-    });
+      // Insert into database
+      const { error } = await supabase.from("signups").insert({
+        email: validatedData.email,
+        occupation_category: validatedData.occupationCategory,
+        detailed_occupation: validatedData.detailedOccupation,
+        expectations: validatedData.expectations || null,
+      });
+
+      if (error) {
+        // Check for duplicate email
+        if (error.code === "23505") {
+          toast({
+            title: "이미 등록된 이메일",
+            description: "해당 이메일은 이미 등록되어 있습니다.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        throw error;
+      }
+
+      setSubmitted(true);
+      toast({
+        title: "관심 등록 완료!",
+        description: "RE:MIND 출시 소식을 가장 먼저 알려드릴게요.",
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "입력 오류",
+          description: firstError.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "오류 발생",
+          description: "등록 중 문제가 발생했습니다. 다시 시도해주세요.",
+          variant: "destructive",
+        });
+      }
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -105,10 +162,10 @@ const SignupForm = () => {
               id="occupationCategory"
               value={occupationCategory}
               onChange={(e) => setOccupationCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer z-10"
+              className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               required
             >
-              <option value="" disabled>직종을 선택해주세요</option>
+              <option value="">선택해주세요</option>
               {occupationCategories.map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -125,7 +182,11 @@ const SignupForm = () => {
               <input
                 type="text"
                 id="detailedOccupation"
-                placeholder="예: 헤어 디자이너, 특수교사, 플로리스트 등"
+                placeholder={
+                  occupationCategory === "미용" ? "예: 헤어 디자이너" :
+                  occupationCategory === "교육" ? "예: 특수교사" :
+                  "예: 플로리스트"
+                }
                 value={detailedOccupation}
                 onChange={(e) => setDetailedOccupation(e.target.value)}
                 className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -136,7 +197,7 @@ const SignupForm = () => {
 
           <div className="space-y-2">
             <label htmlFor="expectations" className="text-sm font-semibold text-foreground block">
-              이 도구에서 가장 기대되는 점이 있다면 알려주세요 (선택)
+              이 도구에서 가장 기대되는 점이 있다면 알려주세요 <span className="text-muted-foreground text-xs">(선택)</span>
             </label>
             <textarea
               id="expectations"
@@ -149,8 +210,12 @@ const SignupForm = () => {
           </div>
 
           <div className="pt-2">
-            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg text-lg py-6">
-              소식 알림받기
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg text-lg py-6 disabled:opacity-50"
+            >
+              {isSubmitting ? "등록 중..." : "소식 알림받기"}
             </Button>
             <p className="text-xs text-muted-foreground text-center mt-4">
               서비스 소식과 베타 테스트 안내를 보내드려요. 스팸은 보내지 않습니다.
