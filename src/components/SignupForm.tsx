@@ -150,7 +150,7 @@ const SignupForm = () => {
 
           <div className="pt-2">
             <Button type="submit" className="w-full bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg text-lg py-6">
-              관심 등록하기
+              소식 알림받기
             </Button>
             <p className="text-xs text-muted-foreground text-center mt-4">
               서비스 소식과 베타 테스트 안내를 보내드려요. 스팸은 보내지 않습니다.
